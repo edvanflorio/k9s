@@ -563,6 +563,7 @@ func (a *App) Run() error {
 		})
 	}()
 
+	logExtTermStatus(a)
 	// A detached instance boots straight into the view it was spawned for.
 	if !bootExtView(a) {
 		if err := a.command.defaultCmd(true); err != nil {

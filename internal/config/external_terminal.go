@@ -45,6 +45,11 @@ var defaultExtTermActions = []ExtTermAction{
 	ExtTermYAML,
 }
 
+// DefaultExtTermActions returns the actions enabled when none are listed.
+func DefaultExtTermActions() []ExtTermAction {
+	return slices.Clone(defaultExtTermActions)
+}
+
 // ExternalTerminal tracks external terminal preferences. When enabled, actions
 // spawn a detached terminal window instead of taking over the k9s terminal.
 type ExternalTerminal struct {

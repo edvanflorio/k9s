@@ -48,6 +48,7 @@ type K9s struct {
 	DisablePodCounting  bool              `json:"disablePodCounting" yaml:"disablePodCounting"`
 	ShellPod            *ShellPod         `json:"shellPod" yaml:"shellPod"`
 	ExternalTerminal    *ExternalTerminal `json:"externalTerminal,omitempty" yaml:"externalTerminal,omitempty"`
+	LogDownloadDir      string            `json:"logDownloadDir,omitempty" yaml:"logDownloadDir,omitempty"`
 	ImageScans          ImageScans        `json:"imageScans" yaml:"imageScans"`
 	Logger              Logger            `json:"logger" yaml:"logger"`
 	Thresholds          Threshold         `json:"thresholds" yaml:"thresholds"`
@@ -150,11 +151,22 @@ func (k *K9s) Merge(k1 *K9s) {
 	k.DisablePodCounting = k1.DisablePodCounting
 	k.ShellPod = k1.ShellPod
 	k.ExternalTerminal = k1.ExternalTerminal
+	k.LogDownloadDir = k1.LogDownloadDir
 	k.Logger = k1.Logger
 	k.ImageScans = k1.ImageScans
 	if k1.Thresholds != nil {
 		k.Thresholds = k1.Thresholds
 	}
+}
+
+// AppLogDownloadDir returns where full log downloads land. Defaults to the
+// system temp dir so a download is easy to find and easy to throw away.
+func (k *K9s) AppLogDownloadDir() string {
+	if k.LogDownloadDir != "" {
+		return k.LogDownloadDir
+	}
+
+	return os.TempDir()
 }
 
 // AppScreenDumpDir fetch screen dumps dir.

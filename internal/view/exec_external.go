@@ -425,3 +425,37 @@ func bootExtView(a *App) bool {
 
 	return true
 }
+
+// logExtTermStatus reports, at startup, whether detached windows are armed and
+// which terminal will be driven. Without it the only trace of the feature is a
+// debug line at keypress time, which makes a misconfigured setup look silent.
+func logExtTermStatus(a *App) {
+	cfg := a.Config.K9s.ExternalTerminal
+	if cfg == nil || !cfg.Enabled {
+		return
+	}
+	if !hasDisplay() {
+		slog.Warn("External terminal enabled but no display. Actions stay in place")
+		return
+	}
+	spec, err := resolveTerm(cfg, exec.LookPath)
+	if err != nil {
+		slog.Warn("External terminal enabled but unusable. Actions stay in place",
+			slogs.Error, err,
+		)
+		return
+	}
+
+	aa := cfg.Actions
+	if len(aa) == 0 {
+		aa = config.DefaultExtTermActions()
+	}
+	ss := make([]string, 0, len(aa))
+	for _, x := range aa {
+		ss = append(ss, string(x))
+	}
+	slog.Info("External terminal armed",
+		slogs.Terminal, spec.bin,
+		slogs.Action, strings.Join(ss, ","),
+	)
+}

@@ -119,6 +119,7 @@
             }
           }
         },
+        "logDownloadDir": { "type": "string" },
         "imageScans": {
           "type": "object",
           "additionalProperties": false,

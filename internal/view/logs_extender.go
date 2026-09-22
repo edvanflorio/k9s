@@ -35,6 +35,8 @@ func (l *LogsExtender) bindKeys(aa *ui.KeyActions) {
 	aa.Bulk(ui.KeyMap{
 		ui.KeyL: ui.NewKeyAction("Logs", l.logsCmd(false), true),
 		ui.KeyP: ui.NewKeyAction("Logs Previous", l.logsCmd(true), true),
+		ui.KeyShiftL: ui.NewKeyAction("Download Logs",
+			l.downloadLogsCmd, true),
 	})
 }
 
