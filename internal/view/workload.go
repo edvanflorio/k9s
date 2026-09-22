@@ -200,6 +200,9 @@ func (w *Workload) yamlCmd(evt *tcell.EventKey) *tcell.EventKey {
 		return evt
 	}
 
+	if launchYAMLExt(w.App(), gvr, fqn) {
+		return nil
+	}
 	v := NewLiveView(w.App(), yamlAction, model.NewYAML(gvr, fqn))
 	if err := v.app.inject(v, false); err != nil {
 		v.app.Flash().Err(err)

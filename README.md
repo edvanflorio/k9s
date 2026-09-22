@@ -567,6 +567,69 @@ Clipboard behavior can also be controlled via environment variables:
 
 ---
 
+## External Terminal
+
+By default, opening a shell, attaching to a container, editing a resource or running a plugin
+suspends K9s and takes over your terminal, so you cannot watch your cluster while you work.
+Logs, describe and YAML views take over the current K9s page for the same reason.
+
+Enabling `externalTerminal` changes that: each of those actions spawns a **separate, detached
+terminal window** and K9s keeps running and rendering where it is. You can stack as many shells,
+log streams and describes as you like, side by side with the K9s table.
+
+  ```yaml
+  k9s:
+    externalTerminal:
+      # Launch actions in a detached terminal window. Defaults to false.
+      enabled: true
+      # Terminal to use. When empty, K9s picks the first one it finds in your
+      # PATH. The K9S_TERMINAL env var takes precedence over this.
+      command: ptyxis
+      # Extra flags handed to the terminal before the command.
+      args:
+        - --title
+        - k9s
+      # Keep the window open once a short lived command (describe/yaml) exits.
+      # Defaults to true. Never applies to shell/attach/edit, which own their
+      # window for their whole life.
+      holdOpen: true
+      # Which actions open externally. Defaults to all of the ones below.
+      actions:
+        - shell
+        - attach
+        - edit
+        - plugin
+        - logs
+        - describe
+        - yaml
+  ```
+
+K9s autodetects these terminals, in this order: `ghostty`, `wezterm`, `kitty`, `alacritty`,
+`foot`, `ptyxis`, `gnome-terminal`, `konsole`, `xfce4-terminal`, `terminator`, `urxvt`, `st`,
+`xterm`, `wt.exe`. To use anything else, set `command` (or `K9S_TERMINAL`) to its binary. If your
+terminal needs a flag before the command, include it: `K9S_TERMINAL="myterm --exec"`.
+
+What lands in the new window depends on the action:
+
+| Action | Runs in the window |
+|--------|--------------------|
+| `logs`, `describe`, `yaml` | **Another K9s**, booted straight into that view. You keep the skin, the filter (`/`), autoscroll and the timestamp toggle. |
+| `shell`, `attach` | `kubectl exec` / `kubectl attach`, same as before. |
+| `edit` | Your `$EDITOR`, same as before. |
+| `plugin` | The plugin command. |
+
+Notes:
+
+* **No display, no window.** Over SSH or anywhere `DISPLAY`/`WAYLAND_DISPLAY` is unset, K9s warns
+  and falls back to the current in-place behavior, so nothing silently stops working.
+* **Piped plugins stay in place.** A plugin using `pipes` needs K9s' stdio, so it is never detached.
+* **`holdOpen` only affects plugins.** Everything else owns its window for its whole life.
+* The spawned K9s inherits the parent's context, kubeconfig and impersonation flags, and is told
+  which view to open through the `K9S_EXT_VIEW` environment variable, which it consumes on startup.
+
+---
+
+
 ## <a id="popeye"></a>Popeye Configuration
 
 K9s has integration with [Popeye](https://popeyecli.io/), which is a Kubernetes cluster sanitizer.  Popeye itself uses a configuration called `spinach.yml`, but when integrating with K9s the cluster-specific file should be name `$XDG_CONFIG_HOME/share/k9s/clusters/clusterX/contextY/spinach.yml`.  This allows you to have a different spinach config per cluster.

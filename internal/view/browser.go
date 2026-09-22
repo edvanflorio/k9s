@@ -16,6 +16,7 @@ import (
 
 	"github.com/derailed/k9s/internal"
 	"github.com/derailed/k9s/internal/client"
+	"github.com/derailed/k9s/internal/config"
 	"github.com/derailed/k9s/internal/config/data"
 	"github.com/derailed/k9s/internal/dao"
 	"github.com/derailed/k9s/internal/model"
@@ -404,6 +405,9 @@ func (b *Browser) viewCmd(evt *tcell.EventKey) *tcell.EventKey {
 		return evt
 	}
 
+	if launchYAMLExt(b.app, b.GVR(), path) {
+		return nil
+	}
 	v := NewLiveView(b.app, yamlAction, model.NewYAML(b.GVR(), path))
 	if err := v.app.inject(v, false); err != nil {
 		v.app.Flash().Err(err)
@@ -572,7 +576,7 @@ func editRes(app *App, gvr *client.GVR, path string) error {
 	if ns != client.BlankNamespace {
 		args = append(args, "-n", ns)
 	}
-	if err := runK(app, &shellOpts{clear: true, args: args}); err != nil {
+	if err := runK(app, &shellOpts{clear: true, args: args, action: config.ExtTermEdit}); err != nil {
 		app.Flash().Errf("Edit command failed: %s", err)
 	}
 

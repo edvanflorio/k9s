@@ -14,6 +14,7 @@ import (
 
 	"github.com/derailed/k9s/internal"
 	"github.com/derailed/k9s/internal/client"
+	"github.com/derailed/k9s/internal/config"
 	"github.com/derailed/k9s/internal/dao"
 	"github.com/derailed/k9s/internal/model"
 	"github.com/derailed/k9s/internal/model1"
@@ -412,7 +413,8 @@ func shellIn(a *App, fqn, co string) error {
 	return runK(a, &shellOpts{
 		clear:  true,
 		banner: c.Sprintf(bannerFmt, fqn, co),
-		args:   args},
+		args:   args,
+		action: config.ExtTermShell},
 	)
 }
 
@@ -453,7 +455,7 @@ func resumeAttachIn(a *App, c model.Component, path, co string) {
 func attachIn(a *App, path, co string) {
 	args := buildShellArgs("attach", path, co, a.Conn().Config().Flags())
 	c := color.New(color.BgGreen).Add(color.FgBlack).Add(color.Bold)
-	if err := runK(a, &shellOpts{clear: true, banner: c.Sprintf(bannerFmt, path, co), args: args}); err != nil {
+	if err := runK(a, &shellOpts{clear: true, banner: c.Sprintf(bannerFmt, path, co), args: args, action: config.ExtTermAttach}); err != nil {
 		a.Flash().Errf("Attach exec failed: %s", err)
 	}
 }

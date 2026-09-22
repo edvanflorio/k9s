@@ -124,6 +124,9 @@ func defaultEnv(c *client.Config, path string, header model1.Header, row *model1
 }
 
 func describeResource(app *App, _ ui.Tabular, gvr *client.GVR, path string) {
+	if launchDescribeExt(app, gvr, path) {
+		return
+	}
 	v := NewLiveView(app, "Describe", model.NewDescribe(gvr, path))
 	if err := app.inject(v, false); err != nil {
 		app.Flash().Err(err)

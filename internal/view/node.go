@@ -196,6 +196,10 @@ func (n *Node) yamlCmd(evt *tcell.EventKey) *tcell.EventKey {
 		return evt
 	}
 
+	if launchYAMLExt(n.App(), n.GVR(), path) {
+		return nil
+	}
+
 	n.Stop()
 	defer n.Start()
 	ctx, cancel := context.WithTimeout(context.Background(), n.App().Conn().Config().CallTimeout())

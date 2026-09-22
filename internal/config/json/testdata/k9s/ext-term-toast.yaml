@@ -1,0 +1,7 @@
+k9s:
+  refreshRate: 2
+  externalTerminal:
+    enabled: true
+    actions:
+      - shell
+      - bogus

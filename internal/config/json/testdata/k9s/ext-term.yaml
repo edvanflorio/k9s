@@ -1,0 +1,17 @@
+k9s:
+  refreshRate: 2
+  externalTerminal:
+    enabled: true
+    command: kitty
+    args:
+      - --title
+      - k9s
+    holdOpen: true
+    actions:
+      - shell
+      - attach
+      - edit
+      - plugin
+      - logs
+      - describe
+      - yaml

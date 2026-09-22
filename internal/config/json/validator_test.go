@@ -138,6 +138,13 @@ func TestValidateK9s(t *testing.T) {
 			f:   "testdata/k9s/toast.yaml",
 			err: `Additional property shellPods is not allowed`,
 		},
+		"ext-term": {
+			f: "testdata/k9s/ext-term.yaml",
+		},
+		"ext-term-toast": {
+			f:   "testdata/k9s/ext-term-toast.yaml",
+			err: `k9s.externalTerminal.actions.1 must be one of the following: "shell", "attach", "edit", "plugin", "logs", "describe", "yaml"`,
+		},
 	}
 
 	v := json.NewValidator()

@@ -49,10 +49,37 @@ type shellOpts struct {
 	binary            string
 	banner            string
 	args              []string
+	// action, when set, allows the command to be launched in a detached
+	// terminal window instead of taking over the k9s terminal.
+	action config.ExtTermAction
 }
 
 func (s shellOpts) String() string {
 	return fmt.Sprintf("%s %s", s.binary, strings.Join(s.args, " "))
+}
+
+// withKubectlFlags injects the connection flags right after the kubectl verb so
+// the spawned command targets the very same cluster/identity as the UI.
+func withKubectlFlags(a *App, args []string) []string {
+	if len(args) == 0 {
+		return args
+	}
+	out := []string{args[0]}
+	if u, err := a.Conn().Config().ImpersonateUser(); err == nil {
+		out = append(out, "--as", u)
+	}
+	if g, err := a.Conn().Config().ImpersonateGroups(); err == nil {
+		out = append(out, "--as-group", g)
+	}
+	if isInsecure := a.Conn().Config().Flags().Insecure; isInsecure != nil && *isInsecure {
+		out = append(out, "--insecure-skip-tls-verify")
+	}
+	out = append(out, "--context", a.Config.K9s.ActiveContextName())
+	if cfg := a.Conn().Config().Flags().KubeConfig; cfg != nil && *cfg != "" {
+		out = append(out, "--kubeconfig", *cfg)
+	}
+
+	return append(out, args[1:]...)
 }
 
 func runK(a *App, opts *shellOpts) error {
@@ -63,23 +90,7 @@ func runK(a *App, opts *shellOpts) error {
 	if err != nil {
 		return fmt.Errorf("kubectl command is not in your path: %w", err)
 	}
-	args := []string{opts.args[0]}
-	if u, err := a.Conn().Config().ImpersonateUser(); err == nil {
-		args = append(args, "--as", u)
-	}
-	if g, err := a.Conn().Config().ImpersonateGroups(); err == nil {
-		args = append(args, "--as-group", g)
-	}
-	if isInsecure := a.Conn().Config().Flags().Insecure; isInsecure != nil && *isInsecure {
-		args = append(args, "--insecure-skip-tls-verify")
-	}
-	args = append(args, "--context", a.Config.K9s.ActiveContextName())
-	if cfg := a.Conn().Config().Flags().KubeConfig; cfg != nil && *cfg != "" {
-		args = append(args, "--kubeconfig", *cfg)
-	}
-	if len(args) > 0 {
-		opts.args = append(args, opts.args[1:]...)
-	}
+	opts.args = withKubectlFlags(a, opts.args)
 	opts.binary = bin
 
 	suspended, errChan, stChan := run(a, opts)
@@ -107,6 +118,13 @@ func run(a *App, opts *shellOpts) (ok bool, errC chan error, outC chan string) {
 			a.Flash().Errf("Exec failed %q: %s", opts, err)
 		}
 		close(errChan)
+		return true, errChan, statusChan
+	}
+
+	// Detached window: k9s keeps rendering, so skip the halt/suspend dance.
+	if tryExternal(a, opts.action, opts, nil) {
+		close(errChan)
+		close(statusChan)
 		return true, errChan, statusChan
 	}
 
@@ -159,6 +177,7 @@ func edit(a *App, opts *shellOpts) bool {
 		return false
 	}
 	opts.binary, opts.background = bin, false
+	opts.action = config.ExtTermEdit
 
 	suspended, errChan, _ := run(a, opts)
 	if !suspended {
@@ -383,7 +402,8 @@ func sshIn(a *App, fqn, co string) error {
 	err = runK(a, &shellOpts{
 		clear:  true,
 		banner: c.Sprintf(bannerFmt, fqn, co),
-		args:   args},
+		args:   args,
+		action: config.ExtTermShell},
 	)
 	if err != nil {
 		return fmt.Errorf("shell exec failed: %w", err)

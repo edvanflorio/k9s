@@ -230,6 +230,7 @@ func executePlugin(r Runner, p *config.Plugin, inputValues dialog.PluginInputVal
 			background: p.Background,
 			pipes:      p.Pipes,
 			args:       args,
+			action:     config.ExtTermPlugin,
 		}
 		suspend, errChan, statusChan := run(r.App(), &opts)
 		if !suspend {

@@ -563,8 +563,11 @@ func (a *App) Run() error {
 		})
 	}()
 
-	if err := a.command.defaultCmd(true); err != nil {
-		return err
+	// A detached instance boots straight into the view it was spawned for.
+	if !bootExtView(a) {
+		if err := a.command.defaultCmd(true); err != nil {
+			return err
+		}
 	}
 	a.SetRunning(true)
 	if err := a.Application.Run(); err != nil {

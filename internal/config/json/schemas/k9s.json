@@ -99,6 +99,26 @@
           },
           "required": ["image", "namespace", "limits"]
         },
+        "externalTerminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "command": { "type": "string" },
+            "args": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "holdOpen": { "type": "boolean" },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["shell", "attach", "edit", "plugin", "logs", "describe", "yaml"]
+              }
+            }
+          }
+        },
         "imageScans": {
           "type": "object",
           "additionalProperties": false,

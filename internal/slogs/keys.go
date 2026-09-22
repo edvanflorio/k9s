@@ -228,4 +228,10 @@ const (
 
 	// Minimum tracks a minimum value logger key.
 	Minimum = "minimum"
+
+	// Action tracks an action name logger key.
+	Action = "action"
+
+	// Terminal tracks an external terminal logger key.
+	Terminal = "terminal"
 )

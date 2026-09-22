@@ -332,6 +332,9 @@ func (x *Xray) showLogs(spec *xray.NodeSpec, prev bool) {
 		Container: co,
 		Previous:  prev,
 	}
+	if launchLogsExt(x.app, client.PodGVR, &opts) {
+		return
+	}
 	if err := x.app.inject(NewLog(client.PodGVR, &opts), false); err != nil {
 		x.app.Flash().Err(err)
 	}
@@ -390,6 +393,10 @@ func (x *Xray) viewCmd(evt *tcell.EventKey) *tcell.EventKey {
 		return evt
 	}
 
+	if launchYAMLExt(x.app, spec.GVR(), spec.Path()) {
+		return nil
+	}
+
 	ctx := x.defaultContext()
 	raw, err := x.model.ToYAML(ctx, spec.GVR(), spec.Path())
 	if err != nil {
@@ -440,6 +447,10 @@ func (x *Xray) describeCmd(evt *tcell.EventKey) *tcell.EventKey {
 }
 
 func (x *Xray) describe(gvr *client.GVR, path string) {
+	if launchDescribeExt(x.app, gvr, path) {
+		return
+	}
+
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, internal.KeyFactory, x.app.factory)
 
@@ -475,7 +486,7 @@ func (x *Xray) editCmd(evt *tcell.EventKey) *tcell.EventKey {
 		if cfg := x.app.Conn().Config().Flags().KubeConfig; cfg != nil && *cfg != "" {
 			args = append(args, "--kubeconfig", *cfg)
 		}
-		if err := runK(x.app, &shellOpts{args: append(args, n)}); err != nil {
+		if err := runK(x.app, &shellOpts{args: append(args, n), action: config.ExtTermEdit}); err != nil {
 			x.app.Flash().Errf("Edit exec failed: %s", err)
 		}
 	}
